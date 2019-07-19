@@ -17,7 +17,7 @@ public class UserSQL implements IUserDao {
 
     @Override
     public User getUserById(int userId) {
-        String query = "SELECT * FROM users WHERE user_id = ?)";
+        String query = "SELECT * FROM users WHERE user_id = ?";
         User user = null;
         try {
             Connection connection = connectionPool.getConnection();
@@ -25,9 +25,7 @@ public class UserSQL implements IUserDao {
             connectionPool.releaseConnection(connection);
             return user;
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in getUserById: " + e.getMessage());
         }
         throw new RuntimeException("No user by that id");
     }

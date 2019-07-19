@@ -4,6 +4,7 @@ import com.codecool.krk.dao.ILoginDAO;
 import com.codecool.krk.dao.ISessionDAO;
 import com.codecool.krk.dao.IUserDao;
 import com.codecool.krk.helper.PasswordHasher;
+import com.codecool.krk.model.User;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -32,48 +33,69 @@ public class Login implements HttpHandler {
         String response = "";
         String method = httpExchange.getRequestMethod();
 
-
         if(method.equals("GET")){
             String cookieStr = httpExchange.getRequestHeaders().getFirst("Cookie");
             HttpCookie cookie;
-            boolean isNewSession;
             if (cookieStr != null) {  // Cookie already exists
                 cookie = HttpCookie.parse(cookieStr).get(0);
                 String sessionId = cookie.getValue();
-
-                isNewSession = false;
-            } else { // Create a new cookie
-                UUID uuid = UUID.randomUUID();
-                cookie = new HttpCookie("sessionId", String.valueOf(uuid.toString()));
-                isNewSession = true;
-                httpExchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
+                if(sessionDAO.isSessionPresent(sessionId)){
+                    int userId = sessionDAO.selectUserIdBySessionId(sessionId);
+                    User user = userDao.getUserById(userId);
+                    response += "<h1>Hello" + user.getName() + "</p>\n<button id=\"logout\">logout</button>";
+                }
+            } else {
+                response = "<html><body>" +
+                        "<form method=\"POST\">\n" +
+                        "  Login:<br>\n" +
+                        "  <input type=\"text\" name=\"login\" placeholder=\"Login\">\n" +
+                        "  <br>\n" +
+                        "  Password:<br>\n" +
+                        "  <input type=\"password\" name=\"password\" placeholder=\"**********\">\n" +
+                        "  <br><br>\n" +
+                        "  <input type=\"submit\" value=\"Submit\">\n" +
+                        "</form> " +
+                        "</body></html>";
             }
-            response = "<html><body>" +
-                    "<form method=\"POST\">\n" +
-                    "  First name:<br>\n" +
-                    "  <input type=\"text\" name=\"firstname\" value=\"Mickey\">\n" +
-                    "  <br>\n" +
-                    "  Last name:<br>\n" +
-                    "  <input type=\"text\" name=\"lastname\" value=\"Mouse\">\n" +
-                    "  <br><br>\n" +
-                    "  <input type=\"submit\" value=\"Submit\">\n" +
-                    "</form> " +
-                    "</body></html>";
         }
 
         if(method.equals("POST")){
-            InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-            BufferedReader br = new BufferedReader(isr);
-            String formData = br.readLine();
+            String cookieStr = httpExchange.getRequestHeaders().getFirst("Cookie");
+            HttpCookie cookie;
+            if (cookieStr != null) {  // Cookie already exists
+                cookie = HttpCookie.parse(cookieStr).get(0);
+                String sessionId = cookie.getValue();
+                if(sessionDAO.isSessionPresent(sessionId)){
+                    // remove session ---------------------------------------------------------
 
-            System.out.println(formData);
-            Map inputs = parseFormData(formData);
+                }
+            }
+            else { // Create a new cookie
+                InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+                BufferedReader br = new BufferedReader(isr);
+                String formData = br.readLine();
+                System.out.println(formData);
+                Map inputs = parseFormData(formData);
+                String login = (String) inputs.get("login");
+                String password = (String) inputs.get("password");
+                if(loginDAO.isLoginPresent(login)){
+                    String salt = loginDAO.selectSaltByLogin(login);
+                    if(loginDAO.isPasswordCorrect(login, passwordHasher.hashPassword(password + salt))){
+                        UUID uuid = UUID.randomUUID();
+                        cookie = new HttpCookie("sessionId", String.valueOf(uuid.toString()));
+                        httpExchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
+                        int userId = loginDAO.selectUserIdByLogin(login);
+                        sessionDAO.insertSessionData(uuid.toString(), userId);
+                        User user = userDao.getUserById(userId);
+                        response = "<html><body>" +
+                                "<h1>Hello" + user.getName() + "</p>\n" +
+                                "<button id=\"logout\">logout</button>\n" +
+                                "</body><html>";
+                    }
+                }
+            }
 
-            response = "<html><body>" +
-                    "<h1>Hello " +
-                    inputs.get("firstname") + " " + inputs.get("lastname") +
-                    "!</h1>" +
-                    "</body><html>";
+
         }
 
         httpExchange.sendResponseHeaders(200, response.length());

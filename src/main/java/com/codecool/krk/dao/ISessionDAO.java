@@ -4,4 +4,5 @@ public interface ISessionDAO {
     void insertSessionData(String sessionId, int userId);
     void deleteSessionData(String sessionId);
     int selectUserIdBySessionId(String sessionId);
+    boolean isSessionPresent(String sessionId);
 }

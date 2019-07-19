@@ -26,9 +26,7 @@ public class LoginSQL implements ILoginDAO {
             exists = executeCheckLogin(login, connection, query);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in isLoginPresent: " + e.getMessage());
         }
         return exists;
     }
@@ -49,9 +47,7 @@ public class LoginSQL implements ILoginDAO {
             prepareSelectSalt(login, connection, query, salt);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in selectSaltByLogin: " + e.getMessage());
         }
         return salt;
     }
@@ -83,9 +79,7 @@ public class LoginSQL implements ILoginDAO {
             exists = executeCheckPassword(login, hashedPassword, connection, query);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in isPasswordCorrect: " + e.getMessage());
         }
         return exists;
     }
@@ -107,9 +101,7 @@ public class LoginSQL implements ILoginDAO {
             prepareSelectUserIdByLogin(login, connection, query, userId);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in selectUserIdByLogin: " + e.getMessage());
         }
         return userId;
     }

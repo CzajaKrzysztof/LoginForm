@@ -22,9 +22,7 @@ public class SessionSQL implements ISessionDAO {
             executeInsertSessionData(connection, query, sessionId, userId);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in insertSessionData: " + e.getMessage());
         }
     }
 
@@ -44,9 +42,7 @@ public class SessionSQL implements ISessionDAO {
             executeDeleteSessionData(connection, query, sessionId);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in deleteSessionData: " + e.getMessage());
         }
     }
 
@@ -67,9 +63,7 @@ public class SessionSQL implements ISessionDAO {
             connectionPool.releaseConnection(connection);
             return userId;
         } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
+            System.err.println("SQLException in selectUserIdBySessionId: " + e.getMessage());
         }
         throw new RuntimeException("No user_Id by that session_id");
     }
@@ -86,6 +80,30 @@ public class SessionSQL implements ISessionDAO {
             while (resultSet.next()) {
                 userId = resultSet.getInt("user_id");
             }
+        }
+    }
+
+    @Override
+    public boolean isSessionPresent(String sessionId) {
+        String query = "SELECT CASE WHEN EXISTS (" +
+                "SELECT * FROM sessions WHERE session_id = ?)" +
+                "THEN true " +
+                "ELSE false END";
+        boolean exists = false;
+        try {
+            Connection connection = connectionPool.getConnection();
+            exists = executeSessionCheck(sessionId, connection, query);
+            connectionPool.releaseConnection(connection);
+        } catch (SQLException e) {
+            System.err.println("SQLExceptionin isSessionPresent: " + e.getMessage());
+        }
+        return exists;
+    }
+
+    private boolean executeSessionCheck(String sessionId, Connection connection, String query) throws SQLException{
+        try(PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, sessionId);
+            return stmt.execute();
         }
     }
 }
