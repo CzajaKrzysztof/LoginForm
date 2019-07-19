@@ -9,19 +9,20 @@ public class PasswordHasher {
     public PasswordHasher() {
     }
 
-    public String hashPassword(String originalString) {
+    public String hashPassword(String password) {
         MessageDigest digest = null;
         try {
-            digest = MessageDigest.getInstance("SHA-1");
+            digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        return bytesToHex(digest.digest(originalString.getBytes(StandardCharsets.UTF_8)));
+        return bytesToHex(digest.digest(password.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public String getRandomSalt(final int size){
+    public String getRandomSalt(){
+        final int SALT_SIZE = 32;
         final SecureRandom secureRandom=new SecureRandom();
-        final byte[] bytes=new byte[size];
+        final byte[] bytes=new byte[SALT_SIZE];
         secureRandom.nextBytes(bytes);
         return bytesToHex(bytes);
     }

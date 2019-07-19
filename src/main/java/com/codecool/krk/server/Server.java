@@ -22,10 +22,8 @@ public class Server {
     }
 
     public void startServer() throws IOException {
-        // create a server on port 8000
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
-        // set routes
         IConnectionPool connectionPool = null;
         try {
             connectionPool = ConnectionPool.create(URL, USER, PASSWORD);
@@ -39,9 +37,8 @@ public class Server {
         PasswordHasher passwordHasher = new PasswordHasher();
 
         server.createContext("/", new Login(credentialsDAO, loginDAO, userDao, passwordHasher));
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(null);
 
-        // start listening
         server.start();
     }
 }
