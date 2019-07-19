@@ -1,6 +1,7 @@
 package com.codecool.krk.server;
 
 import com.codecool.krk.dao.ILoginDAO;
+import com.codecool.krk.dao.ISessionDAO;
 import com.codecool.krk.dao.IUserDao;
 import com.codecool.krk.dao.sql.*;
 import com.codecool.krk.helper.PasswordHasher;
@@ -30,11 +31,12 @@ public class Server {
             e.printStackTrace();
         }
 
+        ISessionDAO sessionDAO = new SessionSQL(connectionPool);
         ILoginDAO loginDAO = new LoginSQL(connectionPool);
         IUserDao userDao = new UserSQL(connectionPool);
         PasswordHasher passwordHasher = new PasswordHasher();
 
-        server.createContext("/", new Login(loginDAO, userDao, passwordHasher));
+        server.createContext("/", new Login(sessionDAO, loginDAO, userDao, passwordHasher));
         server.setExecutor(null);
 
         server.start();

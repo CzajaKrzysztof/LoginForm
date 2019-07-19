@@ -128,47 +128,4 @@ public class LoginSQL implements ILoginDAO {
             }
         }
     }
-
-    @Override
-    public void insertSessionData(String sessionId, int userId) {
-        String query = "INSERT INTO sessions VALUES (?, ?)";
-        try {
-            Connection connection = connectionPool.getConnection();
-            executeInsertSessionData(connection, query, sessionId, userId);
-            connectionPool.releaseConnection(connection);
-        } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
-        }
-    }
-
-    private void executeInsertSessionData(Connection connection, String query, String sessionId, int userId) throws SQLException {
-        try(PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, sessionId);
-            stmt.setInt(2, userId);
-            stmt.execute();
-        }
-    }
-
-    @Override
-    public void deleteSessionData(String sessionId) {
-        String query = "DELETE FROM sessions WHERE session_id = ?";
-        try {
-            Connection connection = connectionPool.getConnection();
-            executeDeleteSessionData(connection, query, sessionId);
-            connectionPool.releaseConnection(connection);
-        } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage()
-                    + "\nSQLState: " + e.getSQLState()
-                    + "\nVendorError: " + e.getErrorCode());
-        }
-    }
-
-    private void executeDeleteSessionData(Connection connection, String query, String sessionId) throws SQLException {
-        try(PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, sessionId);
-            stmt.execute();
-        }
-    }
 }
