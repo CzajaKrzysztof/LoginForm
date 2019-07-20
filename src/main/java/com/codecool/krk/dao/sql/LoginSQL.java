@@ -19,7 +19,7 @@ public class LoginSQL implements ILoginDAO {
         String query = "SELECT CASE WHEN EXISTS (" +
                 "SELECT * FROM credentials WHERE login = ?)" +
                 "THEN true " +
-                "ELSE false END";
+                "ELSE false END AS result";
         boolean exists = false;
         try {
             Connection connection = connectionPool.getConnection();
@@ -34,17 +34,27 @@ public class LoginSQL implements ILoginDAO {
     private boolean executeCheckLogin(String login, Connection connection, String query) throws SQLException{
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, login);
-            return stmt.execute();
+            return getBooleanResult(stmt);
         }
+    }
+
+    private boolean getBooleanResult(PreparedStatement stmt) throws SQLException {
+        boolean result = false;
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                result = rs.getBoolean("result");
+            }
+        }
+        return result;
     }
 
     @Override
     public String selectSaltByLogin(String login) {
-        String query = "SELECT salt FROM credentials WHERE login = ?)";
+        String query = "SELECT salt FROM credentials WHERE login = ?";
         String salt = "";
         try {
             Connection connection = connectionPool.getConnection();
-            prepareSelectSalt(login, connection, query, salt);
+            salt = prepareSelectSalt(login, connection, query, salt);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
             System.err.println("SQLException in selectSaltByLogin: " + e.getMessage());
@@ -52,19 +62,21 @@ public class LoginSQL implements ILoginDAO {
         return salt;
     }
 
-    private void prepareSelectSalt(String login, Connection connection, String query, String salt) throws SQLException {
+    private String prepareSelectSalt(String login, Connection connection, String query, String salt) throws SQLException {
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, login);
-            executeSelectSalt(stmt, salt);
+            salt = executeSelectSalt(stmt, salt);
         }
+        return salt;
     }
 
-    private void executeSelectSalt(PreparedStatement stmt, String salt) throws SQLException {
+    private String executeSelectSalt(PreparedStatement stmt, String salt) throws SQLException {
         try (ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 salt = rs.getString("salt");
             }
         }
+        return salt;
     }
 
     @Override
@@ -72,7 +84,7 @@ public class LoginSQL implements ILoginDAO {
         String query = "SELECT CASE WHEN EXISTS (" +
                 "SELECT * FROM credentials WHERE login = ? AND password_hash = ?)" +
                 "THEN true " +
-                "ELSE false END";
+                "ELSE false END AS result";
         boolean exists = false;
         try {
             Connection connection = connectionPool.getConnection();
@@ -88,7 +100,7 @@ public class LoginSQL implements ILoginDAO {
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, login);
             stmt.setString(2, hashedPassword);
-            return stmt.execute();
+            return getBooleanResult(stmt);
         }
     }
 
@@ -98,7 +110,7 @@ public class LoginSQL implements ILoginDAO {
         int userId = 0;
         try {
             Connection connection = connectionPool.getConnection();
-            prepareSelectUserIdByLogin(login, connection, query, userId);
+            userId = prepareSelectUserIdByLogin(login, connection, query, userId);
             connectionPool.releaseConnection(connection);
         } catch (SQLException e) {
             System.err.println("SQLException in selectUserIdByLogin: " + e.getMessage());
@@ -106,18 +118,20 @@ public class LoginSQL implements ILoginDAO {
         return userId;
     }
 
-    private void prepareSelectUserIdByLogin(String login, Connection connection, String query,int userId) throws SQLException{
+    private int prepareSelectUserIdByLogin(String login, Connection connection, String query,int userId) throws SQLException{
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, login);
-            executeSelectUserIdByLogin(stmt, userId);
+            userId = executeSelectUserIdByLogin(stmt, userId);
         }
+        return userId;
     }
 
-    private void executeSelectUserIdByLogin(PreparedStatement stmt, int sauserId) throws SQLException {
+    private int executeSelectUserIdByLogin(PreparedStatement stmt, int userId) throws SQLException {
         try (ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                sauserId = rs.getInt("user_id");
+                userId = rs.getInt("user_id");
             }
         }
+        return userId;
     }
 }

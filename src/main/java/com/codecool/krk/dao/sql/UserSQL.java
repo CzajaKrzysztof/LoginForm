@@ -21,7 +21,7 @@ public class UserSQL implements IUserDao {
         User user = null;
         try {
             Connection connection = connectionPool.getConnection();
-            prepareSelectUser(userId, connection, query, user);
+            user = prepareSelectUser(userId, connection, query);
             connectionPool.releaseConnection(connection);
             return user;
         } catch (SQLException e) {
@@ -30,21 +30,24 @@ public class UserSQL implements IUserDao {
         throw new RuntimeException("No user by that id");
     }
 
-    private void prepareSelectUser(int userId, Connection connection, String query, User user) throws SQLException {
+    private User prepareSelectUser(int userId, Connection connection, String query) throws SQLException {
+        User user = null;
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, userId);
-            getUserData(stmt, user);
+            return user = getUserData(stmt);
         }
     }
 
-    private void getUserData(PreparedStatement stmt, User user) throws SQLException {
+    private User getUserData(PreparedStatement stmt) throws SQLException {
+        User user = null;
         try (ResultSet resultSet = stmt.executeQuery()) {
             while (resultSet.next()) {
                 int userId = resultSet.getInt("user_id");
                 String name = resultSet.getString("name");
                 String type = resultSet.getString("type");
-                user = new User(userId, name, type);
+                return user = new User(userId, name, type);
             }
         }
+        throw new IllegalArgumentException("No user in database");
     }
 }

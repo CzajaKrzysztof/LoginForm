@@ -88,7 +88,7 @@ public class SessionSQL implements ISessionDAO {
         String query = "SELECT CASE WHEN EXISTS (" +
                 "SELECT * FROM sessions WHERE session_id = ?)" +
                 "THEN true " +
-                "ELSE false END";
+                "ELSE false END AS result";
         boolean exists = false;
         try {
             Connection connection = connectionPool.getConnection();
@@ -103,7 +103,17 @@ public class SessionSQL implements ISessionDAO {
     private boolean executeSessionCheck(String sessionId, Connection connection, String query) throws SQLException{
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, sessionId);
-            return stmt.execute();
+            return getBooleanResult(stmt);
         }
+    }
+
+    private boolean getBooleanResult(PreparedStatement stmt) throws SQLException {
+        boolean result = false;
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                result = rs.getBoolean("result");
+            }
+        }
+        return result;
     }
 }
